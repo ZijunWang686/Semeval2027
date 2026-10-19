@@ -79,9 +79,19 @@ python scorer/score.py --gold ~/mmcqa/rows/qa_mena_dev_en.parquet --pred predict
 ## Upload code changes to GitHub
 
 The upload script skips common model/checkpoint files and files larger than 50 MiB.
-Authenticate Git with GitHub once (for example, run `gh auth login` if GitHub CLI is
-installed). This project is configured to use
+This project is configured to use
 [ZijunWang686/Semeval2027](https://github.com/ZijunWang686/Semeval2027).
+Authenticate once using either GitHub CLI (`gh auth login`) or a personal access token:
+
+```bash
+git config --global credential.helper 'cache --timeout=3600'
+git push -u origin main
+```
+
+When prompted, enter your GitHub username and use a personal access token as the
+password. Create the token in GitHub settings with access to this repository. Do not
+paste the token into a command or commit it to the repository. The credential cache
+keeps it in memory for one hour.
 
 From the repository root, upload code changes with:
 
