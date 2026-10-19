@@ -79,12 +79,12 @@ while IFS= read -r -d '' path; do
 done < <(git diff --cached --name-only -z --diff-filter=ACMRT)
 
 if git diff --cached --quiet; then
-    printf 'No code changes to upload.\n'
-    exit 0
+    printf 'No new code changes to commit.\n'
+else
+    git diff --cached --check
+    git commit -m "$commit_message"
 fi
 
-git diff --cached --check
-git commit -m "$commit_message"
 git push -u origin HEAD
 
 if (( skipped > 0 )); then

@@ -79,22 +79,20 @@ python scorer/score.py --gold ~/mmcqa/rows/qa_mena_dev_en.parquet --pred predict
 ## Upload code changes to GitHub
 
 The upload script skips common model/checkpoint files and files larger than 50 MiB.
-Set up the repository and its GitHub remote once:
+Authenticate Git with GitHub once (for example, run `gh auth login` if GitHub CLI is
+installed). This project is configured to use
+[ZijunWang686/Semeval2027](https://github.com/ZijunWang686/Semeval2027).
+
+From the repository root, upload code changes with:
 
 ```bash
-git init
-git remote add origin https://github.com/<your-name>/<your-repository>.git
+./upload_to_github.sh "描述这次修改"
 ```
 
-Then upload code changes from the repository root:
-
-```bash
-./upload_to_github.sh "Describe your change"
-```
-
-The script stages eligible changes, creates a commit, and pushes the current branch.
+The script stages eligible changes, creates a commit, and pushes the current branch. If a
+previous push failed, running the same command again retries pushing the existing commit.
 Files under model/checkpoint directories and common model-weight extensions are also
-listed in `.gitignore`. GitHub credentials must already be configured for Git.
+listed in `.gitignore`. GitHub credentials must be available to Git.
 
 ## Submission format
 
