@@ -1,0 +1,23 @@
+__pycache__/
+*.pyc
+prediction.jsonl
+prediction.zip
+scores.json
+
+# Local model weights and checkpoints
+models/
+model/
+checkpoints/
+weights/
+*.safetensors
+*.gguf
+*.ggml
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.engine
+*.tflite
+*.h5
+*.hdf5
