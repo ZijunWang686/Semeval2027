@@ -18,8 +18,9 @@ Input: image + spoken question. Output: text answer. All rows below use the full
 | E1: Expert prompt | expert | 64 | 0.757260 | 0.710530 | 0.813587 | 10.642 | 0.273383 | 1.0 |
 | E1: Evidence prompt | evidence | 64 | 0.761837 | 0.716892 | 0.815736 | 11.026 | 0.277395 | 1.0 |
 | E2: Selected generation setting | evidence | 32 | 0.786872 | 0.779164 | 0.797733 | 18.2546 | 0.360756 | 1.0 |
+| E3: Task 2 QLoRA transfer | evidence | 32 | 0.844881 | 0.852787 | 0.838761 | 28.1671 | 0.480965 | 1.0 |
 
-Selected setting: **evidence + 32 tokens**. Next: evaluate transfer of the adapter trained on Task 2.
+Selected setting: **evidence + 32 tokens**. E3 uses the same adapter trained on Task 2, without Task 1 training.
 
 ## Task 2 — Textual Visual QA
 
@@ -31,6 +32,7 @@ Input: image + written question. Output: text answer. All rows below use the ful
 | E1: Expert prompt | expert | 64 | 0.757470 | 0.707780 | 0.818002 | 10.6827 | 0.272292 | 1.0 |
 | E1: Evidence prompt | evidence | 64 | 0.771132 | 0.727347 | 0.822956 | 11.5305 | 0.286341 | 1.0 |
 | E2: Selected generation setting | evidence | 32 | 0.795018 | 0.789404 | 0.803265 | 19.0826 | 0.376828 | 1.0 |
+| E3: E2 + QLoRA | evidence | 32 | 0.848240 | 0.858865 | 0.839549 | 28.7663 | 0.490526 | 1.0 |
 
 Selected setting: **evidence + 32 tokens**. The 64-token reference is the E1 evidence row, not a separate run.
 
@@ -48,8 +50,20 @@ Exact prompt text and generation arguments are recorded in prediction `.meta.jso
 
 | ID | Setting | Training data | Evaluation | Status |
 |---|---|---|---|---|
-| E3 | E2 + QLoRA | Complete English QA train, 10,000 items | Complete QA and SQA dev | Training scripts prepared; training pending |
+| E3 | E2 + QLoRA | Complete English QA train, 10,000 items | Complete QA and SQA dev | Completed |
 | E4 | E2 + BM25 RAG | Index built from complete English QA train | Complete QA dev | Not run |
 | E5 | E3 + same BM25 RAG | Same adapter and index | Complete QA dev | Not run |
 
 Use `scorer/score_json.py` to save scores without automatically overwriting this table. Update the exact experiment row after evaluation.
+
+## E3 training completion — 2026-10-20
+
+Reported server logs: 1 epoch, 1,250 optimizer steps; train_loss=0.92660885; eval_loss=0.89726317; eval_token_acc=0.72892836. Total reported train_runtime=9327.4219 seconds (about 2 h 35 min, including validation), memory metric=19.05 GiB.
+
+Last and best adapter checkpoint: `/root/rivermind-data/mmcqa-runs/E3_qa_qlora/v0-20261020-083644/checkpoint-1250`.
+
+Validation ran twice at completion with the same reported loss. These loss/token metrics are not answer-generation BERTScore or QA accuracy.
+
+E3 complete-dev generation and official scoring completed for both tasks. Predictions and scores are under `outputs/E3_qlora_full_dev/`. QA ran first, followed by SQA. Both scored 1,000 items with Coverage=1.0. QA inference reported 3091.697 seconds (about 51.5 minutes), 0.32345 samples/s.
+
+E3 uses the ms-swift PT inference backend with the trained adapter; E0–E2 used the repository's bare-Thinker inference script. The observed E3–E2 F1 differences are +0.053222 (QA) and +0.058009 (SQA). The inference implementation also changed, so these are pipeline comparisons rather than an isolated adapter-only ablation.
