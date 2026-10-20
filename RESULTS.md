@@ -64,10 +64,10 @@ Selected prompt: **evidence**. F1 increases by 0.027122 over the same-subset E0.
 
 ### Generation screening — same 200 items
 
-| Configuration | Prompt | Max tokens | BERTScore-F1 | Status |
-|---|---|---:|---:|---|
-| E1 / E2 reference | evidence | 64 | 0.771132 | Reused from the prompt experiment; not a new run |
-| E2 candidate | evidence | 32 | 0.795018 | Completed; selected for Task 2 |
+| Configuration | Prompt | Max tokens | BERTScore-F1 | BERTScore-P | BERTScore-R | BLEU | ROUGE-L | Coverage |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| E1 / E2 reference (reused) | evidence | 64 | 0.771132 | 0.727347 | 0.822956 | 11.5305 | 0.286341 | 1.0 |
+| E2 selected | evidence | 32 | 0.795018 | 0.789404 | 0.803265 | 19.0826 | 0.376828 | 1.0 |
 
 Task 2 E2 (32 tokens): BERTScore-P **0.789404**, BERTScore-R **0.803265**, BLEU **19.0826**, ROUGE-L **0.376828**, Coverage **1.0**. F1 increases by **0.023886** over evidence/64 and **0.051008** over the same-subset E0. Precision increases while recall decreases compared with evidence/64. This does not establish why the change helped; truncation and answer content have not been inspected. Both tasks now select evidence/32 on the fixed subset.
 
