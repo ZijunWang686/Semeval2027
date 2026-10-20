@@ -8,6 +8,18 @@
 - E1 compares prompts with a 64-token output cap. E2 uses the selected evidence prompt with a 32-token cap.
 - Results below incorporate the user's 2026-10-20 report that full-dev E1/E2 reruns reproduced the previously supplied metric values. Earlier run logs remain in `EXPERIMENT_RESULTS.md`.
 
+## E3 — LoRA configuration
+
+| Setting | Value |
+|---|---|
+| Method | QLoRA · 4-bit NF4 · BF16 compute |
+| LoRA | Rank **8** · Alpha **16** · Dropout **0.05** |
+| Training data | Task 2 English train · **10,000 items** |
+| Training | **1 epoch** · Learning rate **1e-4** |
+| Batch | **1** × gradient accumulation **8** = effective batch **8** |
+| Trainable modules | LoRA on language-model linear layers; base weights, vision/audio encoders and aligner frozen |
+| Evaluation | Same adapter for both tasks · **evidence** prompt · **32 tokens** · full dev |
+
 ## Task 1 — Spoken Visual QA
 
 Input: image + spoken question. Output: text answer. All rows below use the full English dev split, N=1,000.
