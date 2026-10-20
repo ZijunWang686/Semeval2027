@@ -31,6 +31,15 @@ Use exactly the same IDs and order as Task 2's screening manifest. Task 1 predic
 
 Selected prompt: **evidence**, with an F1 increase of 0.020576 over the same-subset E0 (expert: +0.015999). Scores were supplied in server logs on 2026-10-20. These are development screening results, not a significance claim. Later evaluate transfer of the Task 2-trained LoRA adapter with the original and selected prompts.
 
+### Generation screening — same 200 items
+
+| Configuration | Prompt | Max tokens | BERTScore-F1 | BERTScore-P | BERTScore-R | BLEU | ROUGE-L | Coverage |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| E1 / E2 reference (reused) | evidence | 64 | 0.761837 | 0.716892 | 0.815736 | 11.026 | 0.277395 | 1.0 |
+| E2 selected | evidence | 32 | 0.786872 | 0.779164 | 0.797733 | 18.2546 | 0.360756 | 1.0 |
+
+Task 1 selects **evidence / 32 tokens**. F1 increases by **0.025035** over evidence/64 and **0.045611** over the same-subset E0. Precision increases and recall decreases. Full-dev E2 has not yet been evaluated.
+
 ## Task 2 — Textual Visual QA
 
 Input: image + written question. Output: text answer.
@@ -58,7 +67,9 @@ Selected prompt: **evidence**. F1 increases by 0.027122 over the same-subset E0.
 | Configuration | Prompt | Max tokens | BERTScore-F1 | Status |
 |---|---|---:|---:|---|
 | E1 / E2 reference | evidence | 64 | 0.771132 | Reused from the prompt experiment; not a new run |
-| E2 candidate | evidence | 32 | — | Result not yet reported |
+| E2 candidate | evidence | 32 | 0.795018 | Completed; selected for Task 2 |
+
+Task 2 E2 (32 tokens): BERTScore-P **0.789404**, BERTScore-R **0.803265**, BLEU **19.0826**, ROUGE-L **0.376828**, Coverage **1.0**. F1 increases by **0.023886** over evidence/64 and **0.051008** over the same-subset E0. Precision increases while recall decreases compared with evidence/64. This does not establish why the change helped; truncation and answer content have not been inspected. Both tasks now select evidence/32 on the fixed subset.
 
 ## Prompt definitions
 
@@ -74,7 +85,7 @@ Exact prompt text and generation arguments for new predictions are stored in the
 
 | ID | Setting | Status |
 |---|---|---|
-| E2 | Selected prompt + generation length selection | 32-token result pending |
+| E2 | Selected prompt + generation length selection | Completed on 200 items for both tasks; evidence/32 selected; full-dev confirmation pending |
 | E3 | Selected E2 configuration + Task 2 QLoRA | Not trained |
 | E4 | Selected E2 configuration + BM25 RAG over train Q&A | Not run |
 | E5 | E3 + the same RAG | Not run |
