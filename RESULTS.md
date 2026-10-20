@@ -14,7 +14,7 @@
 |---|---|
 | Method | QLoRA · 4-bit NF4 · BF16 compute |
 | LoRA | Rank **8** · Alpha **16** · Dropout **0.05** |
-| Training data | Task 2 English train · **10,000 items** |
+| Training data | Task 2 English train(image + written question) · **10,000 items** |
 | Training | **1 epoch** · Learning rate **1e-4** |
 | Batch | **1** × gradient accumulation **8** = effective batch **8** |
 | Trainable modules | LoRA on language-model linear layers; base weights, vision/audio encoders and aligner frozen |
@@ -62,7 +62,7 @@ Exact prompt text and generation arguments are recorded in prediction `.meta.jso
 
 | ID | Setting | Training data | Evaluation | Status |
 |---|---|---|---|---|
-| E3 | E2 + QLoRA | Complete English QA train, 10,000 items | Complete QA and SQA dev | Completed |
+| E3 | E2 + QLoRA | Task 2 English train (image + written question), 10,000 items | Complete QA and SQA dev | Completed |
 | E4 | E2 + BM25 RAG | Index built from complete English QA train | Complete QA dev | Not run |
 | E5 | E3 + same BM25 RAG | Same adapter and index | Complete QA dev | Not run |
 
