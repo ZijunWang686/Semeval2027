@@ -134,6 +134,14 @@ Each submission is scored for its own track, and a per-country breakdown of F1 c
 with it. `scorer/` can also run `bert-base-multilingual-cased` for comparison; the ranking
 stays on mmBERT.
 
+## Experimental results
+
+See [RESULTS.md](RESULTS.md) for the baseline and experiment score tables for both tasks.
+Running `scorer/score.py` also updates the matching row automatically. The task is
+detected from filenames containing `sqa` or `qa`; pass `--task` if it cannot be detected.
+The default row is the original baseline. For other experiments, pass one of
+`--experiment prompt`, `--experiment lora`, or `--experiment prompt-lora`.
+
 ## Timeline
 
 The official schedule is on the [task website](https://mmcultureqa-semeval27.github.io/#dates).
