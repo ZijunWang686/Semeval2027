@@ -14,7 +14,7 @@
 |---|---|
 | Method | QLoRA · 4-bit NF4 · BF16 compute |
 | LoRA | Rank **8** · Alpha **16** · Dropout **0.05** |
-| Training data | Task 2 English train(image + written question) · **10,000 items** |
+| Training data | Task 2 English train (image + written question) · **10,000 items** |
 | Training | **1 epoch** · Learning rate **1e-4** |
 | Batch | **1** × gradient accumulation **8** = effective batch **8** |
 | Trainable modules | LoRA on language-model linear layers; base weights, vision/audio encoders and aligner frozen |
@@ -45,6 +45,8 @@ Input: image + written question. Output: text answer. All rows below use the ful
 | E1: Evidence prompt | evidence | 64 | 0.771132 | 0.727347 | 0.822956 | 11.5305 | 0.286341 | 1.0 |
 | E2: Selected generation setting | evidence | 32 | 0.795018 | 0.789404 | 0.803265 | 19.0826 | 0.376828 | 1.0 |
 | E3: E2 + QLoRA | evidence | 32 | 0.848240 | 0.858865 | 0.839549 | 28.7663 | 0.490526 | 1.0 |
+| E4: E2 + BM25 RAG | evidence + retrieved context | 32 | 0.798954 | 0.793805 | 0.806665 | 21.1541 | 0.391034 | 1.0 |
+| E5: QLoRA + BM25 RAG | evidence + retrieved context | 32 | 0.829106 | 0.834995 | 0.825139 | 25.044 | 0.441971 | 1.0 |
 
 Selected setting: **evidence + 32 tokens**. The 64-token reference is the E1 evidence row, not a separate run.
 
@@ -63,8 +65,10 @@ Exact prompt text and generation arguments are recorded in prediction `.meta.jso
 | ID | Setting | Training data | Evaluation | Status |
 |---|---|---|---|---|
 | E3 | E2 + QLoRA | Task 2 English train (image + written question), 10,000 items | Complete QA and SQA dev | Completed |
-| E4 | E2 + BM25 RAG | Index built from complete English QA train | Complete QA dev | Not run |
-| E5 | E3 + same BM25 RAG | Same adapter and index | Complete QA dev | Not run |
+| E4 | E2 + BM25 RAG | Index built from complete English QA train | Complete QA dev | Completed |
+| E5 | E3 + same BM25 RAG | Same adapter and index | Complete QA dev | Completed |
+
+Task 2's best measured configuration remains **E3: evidence + 32 tokens + QLoRA**, F1=0.848240. Adding BM25 RAG to that pipeline (E5) decreases F1 by 0.019134; P, R, BLEU and ROUGE-L also decrease, while Coverage stays 1.0. E5 exceeds E4 by 0.030152 F1. These results do not identify the cause of the decline or imply that RAG in general cannot help. Task 1 RAG experiments have not been run.
 
 Use `scorer/score_json.py` to save scores without automatically overwriting this table. Update the exact experiment row after evaluation.
 
