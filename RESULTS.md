@@ -59,8 +59,8 @@ Input: image + written question. Output: text answer. All rows below use the ful
 | E1: Evidence prompt | evidence | 64 | 0.771132 | 0.727347 | 0.822956 | 11.5305 | 0.286341 | 1.0 |
 | E2: Selected generation setting | evidence | 32 | 0.795018 | 0.789404 | 0.803265 | 19.0826 | 0.376828 | 1.0 |
 | E3: E2 + QLoRA | evidence | 32 | 0.848240 | 0.858865 | 0.839549 | 28.7663 | 0.490526 | 1.0 |
-| E4: E2 + BM25 RAG | evidence + retrieved context | 32 | 0.798954 | 0.793805 | 0.806665 | 21.1541 | 0.391034 | 1.0 |
-| E5: QLoRA + BM25 RAG | evidence + retrieved context | 32 | 0.829106 | 0.834995 | 0.825139 | 25.044 | 0.441971 | 1.0 |
+| E4: E2 + BGE-M3 RAG | evidence + retrieved context | 32 | 0.795875 | 0.790686 | 0.803606 | 20.3903 | 0.381847 | 1.0 |
+| E5: QLoRA + BGE-M3 RAG | evidence + retrieved context | 32 | 0.828100 | 0.833577 | 0.824578 | 25.0248 | 0.435761 | 1.0 |
 | E6: Joint QA + SQA QLoRA | evidence | 32 | 0.852181 | 0.863649 | 0.842738 | 29.8649 | 0.500011 | 1.0 |
 
 Selected setting: **evidence + 32 tokens**. The 64-token reference is the E1 evidence row, not a separate run.
@@ -75,16 +75,16 @@ All variants retain the same Qwen system identity.
 
 Exact prompt text and generation arguments are recorded in prediction `.meta.json` files.
 
-## Remaining experiments
+## Experiment status
 
 | ID | Setting | Training data | Evaluation | Status |
 |---|---|---|---|---|
 | E3 | E2 + QLoRA | Task 2 English train (image + written question), 10,000 items | Complete QA and SQA dev | Completed |
-| E4 | E2 + BM25 RAG | Index built from complete English QA train | Complete QA dev | Completed |
-| E5 | E3 + same BM25 RAG | Same adapter and index | Complete QA dev | Completed |
+| E4 | E2 + BGE-M3 dense RAG | Index built from complete English QA train | Complete QA dev | Completed |
+| E5 | E3 + same BGE-M3 dense RAG | Same adapter and index | Complete QA dev | Completed |
 | E6 | Joint QA + SQA QLoRA | Paired English train, 10,000 + 10,000 inputs | Complete QA and SQA dev | Completed; both tasks scored 1,000 dev items |
 
-The best measured configuration for both tasks is **E6: evidence + 32 tokens + joint QLoRA**, with QA F1=0.852181 and SQA F1=0.850440. Relative to E3, QA improves by 0.003941 and SQA by 0.005559. Adding BM25 RAG to that pipeline (E5) decreases F1 by 0.019134; P, R, BLEU and ROUGE-L also decrease, while Coverage stays 1.0. E5 exceeds E4 by 0.030152 F1. These results do not identify the cause of the decline or imply that RAG in general cannot help. Task 1 RAG experiments have not been run.
+The best measured configuration for both tasks is **E6: evidence + 32 tokens + joint QLoRA**, with QA F1=0.852181 and SQA F1=0.850440. Relative to E3, QA improves by 0.003941 and SQA by 0.005559. Adding BGE-M3 RAG to E3 (E5) decreases QA F1 by 0.020140; P, R, BLEU and ROUGE-L also decrease, while Coverage stays 1.0. E4 differs from E2 by +0.000857 F1. E5 exceeds E4 by 0.032225 F1, but their inference backends differ, so this is not an isolated adapter comparison. These results do not identify the cause of the decline or imply that RAG in general cannot help. Task 1 RAG experiments have not been run.
 
 Use `scorer/score_json.py` to save scores without automatically overwriting this table. Update the exact experiment row after evaluation.
 
@@ -114,3 +114,25 @@ User-reported server results: 1,000 paired question IDs per task, official pinne
 | SQA | +0.0055590364 | [0.0032848944, 0.0078314553] |
 
 Both intervals exclude zero and support an improvement on this dev set. These intervals quantify question-sampling uncertainty for the fitted models, not variability across training seeds. Outputs: `outputs/E6_joint_full_dev/qa_bootstrap.json` and `sqa_bootstrap.json`, with paired per-item scores in corresponding `.items.jsonl` files.
+
+## BGE-M3 RAG — completed, 2026-10-25
+
+The main-table E4/E5 rows now designate BGE-M3 dense retrieval. The earlier BM25 runs are preserved below as supplementary retriever comparisons. Results were reported by the user from server scoring outputs; both BGE-M3 runs evaluate the complete 1,000-item English QA dev split.
+
+- Frozen BAAI/bge-m3, snapshot `5617a9f61b028005a4858fdac845db406aefb181`; CLS pooling, L2-normalized 1024-dimensional vectors, exact cosine search, Top-3.
+- Corpus: all 10,000 English QA train question–answer pairs; query: dev question only, with no extra retrieval instruction. Dev reference answers are excluded from retrieval and generation inputs.
+- The retrieved context and evidence prompt are shared by E4/E5. Greedy decoding, 32 generated tokens, 4-bit NF4. E4 uses the original Thinker backend; E5 uses ms-swift PT with the existing E3 adapter, without additional training.
+- Outputs: `outputs/E4_bge_m3_full_dev/` and `outputs/E5_bge_m3_full_dev/`. Implementation: `rag/BGE_M3_GUIDE_ZH.md`.
+
+### Supplementary retriever comparison
+
+All rows use complete English QA dev (N=1,000). Compare retrievers within the same generation setting.
+
+| Setting | Retriever | BERTScore-F1 | BERTScore-P | BERTScore-R | BLEU | ROUGE-L | Coverage |
+|---|---|---:|---:|---:|---:|---:|---:|
+| E2 + RAG | BM25 | 0.798954 | 0.793805 | 0.806665 | 21.1541 | 0.391034 | 1.0 |
+| E2 + RAG (main E4) | BGE-M3 dense | 0.795875 | 0.790686 | 0.803606 | 20.3903 | 0.381847 | 1.0 |
+| E3 + RAG | BM25 | 0.829106 | 0.834995 | 0.825139 | 25.044 | 0.441971 | 1.0 |
+| E3 + RAG (main E5) | BGE-M3 dense | 0.828100 | 0.833577 | 0.824578 | 25.0248 | 0.435761 | 1.0 |
+
+BGE-M3 minus BM25 F1: −0.003079 without LoRA and −0.001006 with the E3 adapter. Neither retriever improves over E3 without retrieval (0.848240). No paired significance test has been run for the retriever differences. The measured outcome supports the same practical choice: retain E6 without RAG as the final system.
