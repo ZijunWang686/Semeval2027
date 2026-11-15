@@ -28,7 +28,7 @@
 | LoRA | Rank **16** · Alpha **32** · Dropout **0.05** |
 | Trainable modules | LoRA on language-model linear layers; base weights, vision/audio encoders and aligner frozen |
 | Training data | Paired English train · **10,000 QA + 10,000 SQA inputs** |
-| Training | **3 epoch** · Learning rate **1e-4** · effective batch **8** · max_length **4096** · max_pixels **401408** |
+| Training | Learning rate **1e-4** · effective batch **8** · max_length **4096** · max_pixels **401408** |
 | Checkpoint | **checkpoint-3,500** selected as best on a fixed 200-item dev subset |
 | Evaluation | **evidence** prompt · **32 tokens** · full dev |
 
@@ -38,13 +38,13 @@ Input: image + spoken question. Output: text answer. All rows below use the full
 
 | Experiment | Prompt | Max tokens | BERTScore-F1 | BERTScore-P | BERTScore-R | BLEU | ROUGE-L | Coverage |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| E0: Original baseline | official | 64 | 0.735861 | 0.687493 | 0.793918 | 9.4574 | 0.248659 | 1.0 |
-| E1: Expert prompt | expert | 64 | 0.757260 | 0.710530 | 0.813587 | 10.642 | 0.273383 | 1.0 |
-| E1: Evidence prompt | evidence | 64 | 0.761837 | 0.716892 | 0.815736 | 11.026 | 0.277395 | 1.0 |
-| E2: Selected generation setting | evidence | 32 | 0.786872 | 0.779164 | 0.797733 | 18.2546 | 0.360756 | 1.0 |
-| E3: Task 2 QLoRA transfer | evidence | 32 | 0.844881 | 0.852787 | 0.838761 | 28.1671 | 0.480965 | 1.0 |
-| E6: Joint QA + SQA QLoRA | evidence | 32 | 0.850440 | 0.860882 | 0.841915 | 29.3847 | 0.496957 | 1.0 |
-| E8: 7B joint BF16 LoRA | evidence | 32 | 0.855884 | 0.868877 | 0.844786 | 26.6315 | 0.507813 | 1.0 |
+| E0: Original baseline | official | 64 | 0.7359 | 0.6875 | 0.7939 | 9.4574 | 0.2487 | 1.0 |
+| E1: Expert prompt | expert | 64 | 0.7573 | 0.7105 | 0.8136 | 10.642 | 0.2734 | 1.0 |
+| E1: Evidence prompt | evidence | 64 | 0.7618 | 0.7169 | 0.8157 | 11.026 | 0.2774 | 1.0 |
+| E2: Selected generation setting | evidence | 32 | 0.7869 | 0.7792 | 0.7977 | 18.2546 | 0.3608 | 1.0 |
+| E3: Task 2 QLoRA transfer | evidence | 32 | 0.8449 | 0.8528 | 0.8388 | 28.1671 | 0.4810 | 1.0 |
+| E6: Joint QA + SQA QLoRA | evidence | 32 | 0.8504 | 0.8609 | 0.8419 | 29.3847 | 0.4970 | 1.0 |
+| E8: 7B joint BF16 LoRA | evidence | 32 | 0.8559 | 0.8689 | 0.8448 | 26.6315 | 0.5078 | 1.0 |
 
 Selected setting: **evidence + 32 tokens**. E3 uses the same adapter trained on Task 2, without Task 1 training. The E8 configuration is described in the E8 configuration section.
 
@@ -54,16 +54,16 @@ Input: image + written question. Output: text answer. All rows below use the ful
 
 | Experiment | Prompt | Max tokens | BERTScore-F1 | BERTScore-P | BERTScore-R | BLEU | ROUGE-L | Coverage |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| E0: Original baseline | official | 64 | 0.739426 | 0.691355 | 0.797229 | 9.581 | 0.250891 | 1.0 |
-| E1: Expert prompt | expert | 64 | 0.757470 | 0.707780 | 0.818002 | 10.6827 | 0.272292 | 1.0 |
-| E1: Evidence prompt | evidence | 64 | 0.771132 | 0.727347 | 0.822956 | 11.5305 | 0.286341 | 1.0 |
-| E2: Selected generation setting | evidence | 32 | 0.795018 | 0.789404 | 0.803265 | 19.0826 | 0.376828 | 1.0 |
-| E3: E2 + QLoRA | evidence | 32 | 0.848240 | 0.858865 | 0.839549 | 28.7663 | 0.490526 | 1.0 |
-| E4: E2 + BGE-M3 RAG | evidence + retrieved context | 32 | 0.795875 | 0.790686 | 0.803606 | 20.3903 | 0.381847 | 1.0 |
-| E5: QLoRA + BGE-M3 RAG | evidence + retrieved context | 32 | 0.828100 | 0.833577 | 0.824578 | 25.0248 | 0.435761 | 1.0 |
-| E6: Joint QA + SQA QLoRA | evidence | 32 | 0.852181 | 0.863649 | 0.842738 | 29.8649 | 0.500011 | 1.0 |
-| E7: 7B QA-only LoRA | evidence | 32 | 0.854924 | 0.866052 | 0.845836 | 30.178 | 0.510845 | 1.0 |
-| E8: 7B joint BF16 LoRA | evidence | 32 | 0.855361 | 0.867892 | 0.844675 | 26.957 | 0.509427 | 1.0 |
+| E0: Original baseline | official | 64 | 0.7394 | 0.6914 | 0.7972 | 9.581 | 0.2509 | 1.0 |
+| E1: Expert prompt | expert | 64 | 0.7575 | 0.7078 | 0.8180 | 10.6827 | 0.2723 | 1.0 |
+| E1: Evidence prompt | evidence | 64 | 0.7711 | 0.7273 | 0.8230 | 11.5305 | 0.2863 | 1.0 |
+| E2: Selected generation setting | evidence | 32 | 0.7950 | 0.7894 | 0.8033 | 19.0826 | 0.3768 | 1.0 |
+| E3: E2 + QLoRA | evidence | 32 | 0.8482 | 0.8589 | 0.8395 | 28.7663 | 0.4905 | 1.0 |
+| E4: E2 + BGE-M3 RAG | evidence + retrieved context | 32 | 0.7959 | 0.7907 | 0.8036 | 20.3903 | 0.3818 | 1.0 |
+| E5: QLoRA + BGE-M3 RAG | evidence + retrieved context | 32 | 0.8281 | 0.8336 | 0.8246 | 25.0248 | 0.4358 | 1.0 |
+| E6: Joint QA + SQA QLoRA | evidence | 32 | 0.8522 | 0.8636 | 0.8427 | 29.8649 | 0.5000 | 1.0 |
+| E7: 7B QA-only LoRA | evidence | 32 | 0.8549 | 0.8661 | 0.8458 | 30.178 | 0.5108 | 1.0 |
+| E8: 7B joint BF16 LoRA | evidence | 32 | 0.8554 | 0.8679 | 0.8447 | 26.957 | 0.5094 | 1.0 |
 
 Selected setting: **evidence + 32 tokens**. The 64-token reference is the E1 evidence row, not a separate run. E7 uses Qwen2.5-Omni-7B with BF16 LoRA (rank 8, alpha 16, 1 epoch, 10,000 Task 2 training items only) and the same evidence/32 inference; it differs from E6 by model size and training data only. E8 uses Qwen2.5-Omni-7B with joint BF16 LoRA (rank 16, alpha 32, 10,000 QA + 10,000 SQA inputs); checkpoint-3,500 was selected as best on a fixed 200-item dev subset.
 
@@ -176,10 +176,10 @@ E8 QA has BERTScore-P 0.867892 > R 0.844675, so the 32-token cap was suspected o
 
 | Setting | BERTScore-F1 | BERTScore-P | BERTScore-R | BLEU | ROUGE-L |
 |---|---:|---:|---:|---:|---:|
-| 32 tokens, greedy (baseline) | 0.861116 | — | — | — | — |
+| 32 tokens, greedy (baseline) | 0.861116 | 0.872323 | 0.851614 | 28.8006 | 0.530654 |
 | 48 tokens, greedy | **0.865436** | 0.871523 | 0.860769 | 30.0986 | 0.533245 |
 | 48 tokens, greedy, repetition_penalty 1.1 | 0.855281 | 0.857612 | 0.854303 | 27.5140 | 0.512264 |
-| 64 tokens, greedy | 0.865588 | — | — | 30.1357 | 0.532969 |
+| 64 tokens, greedy | 0.865588 | 0.871507 | 0.861102 | 30.1357 | 0.532969 |
 
 The 32→48 change raises R from ~0.845 to 0.861 with P essentially unchanged, confirming that the 32-token cap was truncating answers and that the extra tokens carry real information (not padding). The gain over the 200-item baseline is **+0.0043 F1** and **+2.58 BLEU**; the full-dev 32-token baseline (QA 0.855361) was measured on 1,000 items, so the 200-item +0.0043 is not directly comparable to it, but direction and magnitude are consistent.
 
