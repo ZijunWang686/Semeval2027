@@ -28,7 +28,7 @@
 | LoRA | Rank **16** · Alpha **32** · Dropout **0.05** |
 | Trainable modules | LoRA on language-model linear layers; base weights, vision/audio encoders and aligner frozen |
 | Training data | Paired English train · **10,000 QA + 10,000 SQA inputs** |
-| Training | Learning rate **1e-4** · effective batch **8** · max_length **4096** · max_pixels **401408** |
+| Training | **3 epoch** · Learning rate **1e-4** · effective batch **8** · max_length **4096** · max_pixels **401408** |
 | Checkpoint | **checkpoint-3,500** selected as best on a fixed 200-item dev subset |
 | Evaluation | **evidence** prompt · **32 tokens** · full dev |
 
