@@ -1,8 +1,8 @@
 # Experimental Results
 
-## Same-backend control — 2026-10-21
+## Same-backend control (3B) — 2026-10-21
 
-Fixed 200 paired dev IDs, evidence/32, ms-swift PT for both base and E3. E3 predictions are extracted from the completed full-dev run. These control results are separate from the full-dev tables below.
+Fixed 200 paired dev IDs, evidence/32, ms-swift PT for both the 3B base and E3. E3 predictions are extracted from the completed full-dev run. These control results are separate from the full-dev tables below. E7–E8 use the same ms-swift PT backend, so 3B-versus-7B comparisons share the inference implementation; a 7B base no-adapter control has not been run.
 
 | Task | Model | N | BERTScore-F1 | BERTScore-P | BERTScore-R | BLEU | ROUGE-L | Coverage |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -15,8 +15,8 @@ QA F1 difference: **+0.047036**; SQA F1 difference: **+0.051397**, with the adap
 
 ## Unified settings
 
-- Model: Qwen2.5-Omni-3B; English (`en`), MENA, complete dev split (1,000 items per task).
-- Inference: 4-bit NF4 quantization and greedy decoding; no fine-tuning in E0–E2.
+- Model: Qwen2.5-Omni-3B for E0–E6; Qwen2.5-Omni-7B for E7–E8. English (`en`), MENA, complete dev split (1,000 items per task).
+- Inference: 4-bit NF4 quantization for E0–E6 and BF16 for E7–E8; greedy decoding throughout; no fine-tuning in E0–E2.
 - Scoring: official default mmBERT configuration. BERTScore-F1 is the primary metric.
 - E1 compares prompts with a 64-token output cap. E2 uses the selected evidence prompt with a 32-token cap.
 - Results below incorporate the user's 2026-10-20 report that full-dev E1/E2 reruns reproduced the previously supplied metric values. Earlier run logs remain in `EXPERIMENT_RESULTS.md`.
@@ -33,6 +33,18 @@ QA F1 difference: **+0.047036**; SQA F1 difference: **+0.051397**, with the adap
 | Trainable modules | LoRA on language-model linear layers; base weights, vision/audio encoders and aligner frozen |
 | Evaluation | Same adapter for both tasks · **evidence** prompt · **32 tokens** · full dev |
 
+## E8 — LoRA configuration
+
+| Setting | Value |
+|---|---|
+| Method | LoRA · BF16 (no quantization) |
+| LoRA | Rank **16** · Alpha **32** · Dropout **0.05** |
+| Trainable modules | LoRA on language-model linear layers; base weights, vision/audio encoders and aligner frozen |
+| Training data | Paired English train · **10,000 QA + 10,000 SQA inputs** |
+| Training | Learning rate **1e-4** · effective batch **8** · max_length **4096** · max_pixels **401408** |
+| Checkpoint | **checkpoint-3,500** selected as best on a fixed 200-item dev subset |
+| Evaluation | **evidence** prompt · **32 tokens** · full dev |
+
 ## Task 1 — Spoken Visual QA
 
 Input: image + spoken question. Output: text answer. All rows below use the full English dev split, N=1,000.
@@ -45,8 +57,9 @@ Input: image + spoken question. Output: text answer. All rows below use the full
 | E2: Selected generation setting | evidence | 32 | 0.786872 | 0.779164 | 0.797733 | 18.2546 | 0.360756 | 1.0 |
 | E3: Task 2 QLoRA transfer | evidence | 32 | 0.844881 | 0.852787 | 0.838761 | 28.1671 | 0.480965 | 1.0 |
 | E6: Joint QA + SQA QLoRA | evidence | 32 | 0.850440 | 0.860882 | 0.841915 | 29.3847 | 0.496957 | 1.0 |
+| E8: 7B joint BF16 LoRA | evidence | 32 | 0.855884 | 0.868877 | 0.844786 | 26.6315 | 0.507813 | 1.0 |
 
-Selected setting: **evidence + 32 tokens**. E3 uses the same adapter trained on Task 2, without Task 1 training.
+Selected setting: **evidence + 32 tokens**. E3 uses the same adapter trained on Task 2, without Task 1 training. The E8 configuration is described in the E8 configuration section.
 
 ## Task 2 — Textual Visual QA
 
@@ -62,8 +75,10 @@ Input: image + written question. Output: text answer. All rows below use the ful
 | E4: E2 + BGE-M3 RAG | evidence + retrieved context | 32 | 0.795875 | 0.790686 | 0.803606 | 20.3903 | 0.381847 | 1.0 |
 | E5: QLoRA + BGE-M3 RAG | evidence + retrieved context | 32 | 0.828100 | 0.833577 | 0.824578 | 25.0248 | 0.435761 | 1.0 |
 | E6: Joint QA + SQA QLoRA | evidence | 32 | 0.852181 | 0.863649 | 0.842738 | 29.8649 | 0.500011 | 1.0 |
+| E7: 7B QA-only LoRA | evidence | 32 | 0.852083 | 0.863411 | 0.842868 | 29.523 | 0.504503 | 1.0 |
+| E8: 7B joint BF16 LoRA | evidence | 32 | 0.855361 | 0.867892 | 0.844675 | 26.957 | 0.509427 | 1.0 |
 
-Selected setting: **evidence + 32 tokens**. The 64-token reference is the E1 evidence row, not a separate run.
+Selected setting: **evidence + 32 tokens**. The 64-token reference is the E1 evidence row, not a separate run. E7 uses Qwen2.5-Omni-7B with BF16 LoRA (rank 8, alpha 16, 1 epoch, 10,000 Task 2 training items only) and the same evidence/32 inference; it differs from E6 by model size and training data only. E8 uses Qwen2.5-Omni-7B with joint BF16 LoRA (rank 16, alpha 32, 10,000 QA + 10,000 SQA inputs); checkpoint-3,500 was selected as best on a fixed 200-item dev subset.
 
 ## Prompt definitions
 
@@ -83,8 +98,10 @@ Exact prompt text and generation arguments are recorded in prediction `.meta.jso
 | E4 | E2 + BGE-M3 dense RAG | Index built from complete English QA train | Complete QA dev | Completed |
 | E5 | E3 + same BGE-M3 dense RAG | Same adapter and index | Complete QA dev | Completed |
 | E6 | Joint QA + SQA QLoRA | Paired English train, 10,000 + 10,000 inputs | Complete QA and SQA dev | Completed; both tasks scored 1,000 dev items |
+| E7 | 7B QA-only BF16 LoRA | Task 2 English train (image + written question), 10,000 items | Complete QA dev | Completed; full-dev QA scored, 1,000 items |
+| E8 | 7B joint BF16 LoRA | Paired English train, 10,000 + 10,000 inputs | Complete QA and SQA dev | Completed; checkpoint-3,500, both tasks scored 1,000 dev items |
 
-The best measured configuration for both tasks is **E6: evidence + 32 tokens + joint QLoRA**, with QA F1=0.852181 and SQA F1=0.850440. Relative to E3, QA improves by 0.003941 and SQA by 0.005559. Adding BGE-M3 RAG to E3 (E5) decreases QA F1 by 0.020140; P, R, BLEU and ROUGE-L also decrease, while Coverage stays 1.0. E4 differs from E2 by +0.000857 F1. E5 exceeds E4 by 0.032225 F1, but their inference backends differ, so this is not an isolated adapter comparison. These results do not identify the cause of the decline or imply that RAG in general cannot help. Task 1 RAG experiments have not been run.
+The best measured configuration for both tasks is **E8: evidence + 32 tokens + 7B joint BF16 LoRA**, with QA F1=0.855361 and SQA F1=0.855884. Against the previous 3B best (E6: QA 0.852181, SQA 0.850440), E8 improves QA by **+0.003180** and SQA by **+0.005444**. Within the 3B series, E6 improves over E3 by +0.003941 (QA) and +0.005559 (SQA). Adding BGE-M3 RAG to E3 (E5) decreases QA F1 by 0.020140; P, R, BLEU and ROUGE-L also decrease, while Coverage stays 1.0. E4 differs from E2 by +0.000857 F1. E5 exceeds E4 by 0.032225 F1, but their inference backends differ, so this is not an isolated adapter comparison. These results do not identify the cause of the decline or imply that RAG in general cannot help. Task 1 RAG experiments have not been run.
 
 Use `scorer/score_json.py` to save scores without automatically overwriting this table. Update the exact experiment row after evaluation.
 
@@ -115,6 +132,10 @@ User-reported server results: 1,000 paired question IDs per task, official pinne
 
 Both intervals exclude zero and support an improvement on this dev set. These intervals quantify question-sampling uncertainty for the fitted models, not variability across training seeds. Outputs: `outputs/E6_joint_full_dev/qa_bootstrap.json` and `sqa_bootstrap.json`, with paired per-item scores in corresponding `.items.jsonl` files.
 
+## E8 completion — 2026-11-15
+
+Qwen2.5-Omni-7B joint BF16 LoRA, 10,000 QA + 10,000 SQA inputs. **checkpoint-3,500** selected as best on a fixed 200-item dev subset. Full English dev was scored for both tasks, 1,000 items each, with the official mmBERT configuration using a local copy of `jhu-clsp/mmBERT-base`. Predictions and scores: `outputs/E8_7b_full_dev_qa/` and `outputs/E8_7b_full_dev_sqa/`.
+
 ## BGE-M3 RAG — completed, 2026-10-25
 
 The main-table E4/E5 rows now designate BGE-M3 dense retrieval. The earlier BM25 runs are preserved below as supplementary retriever comparisons. Results were reported by the user from server scoring outputs; both BGE-M3 runs evaluate the complete 1,000-item English QA dev split.
@@ -135,4 +156,4 @@ All rows use complete English QA dev (N=1,000). Compare retrievers within the sa
 | E3 + RAG | BM25 | 0.829106 | 0.834995 | 0.825139 | 25.044 | 0.441971 | 1.0 |
 | E3 + RAG (main E5) | BGE-M3 dense | 0.828100 | 0.833577 | 0.824578 | 25.0248 | 0.435761 | 1.0 |
 
-BGE-M3 minus BM25 F1: −0.003079 without LoRA and −0.001006 with the E3 adapter. Neither retriever improves over E3 without retrieval (0.848240). No paired significance test has been run for the retriever differences. The measured outcome supports the same practical choice: retain E6 without RAG as the final system.
+BGE-M3 minus BM25 F1: −0.003079 without LoRA and −0.001006 with the E3 adapter. Neither retriever improves over E3 without retrieval (0.848240). No paired significance test has been run for the retriever differences. The measured outcome supports the same practical choice: retain E8 without RAG as the final system.
