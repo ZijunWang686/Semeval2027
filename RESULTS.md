@@ -75,7 +75,7 @@ Input: image + written question. Output: text answer. All rows below use the ful
 | E4: E2 + BGE-M3 RAG | evidence + retrieved context | 32 | 0.795875 | 0.790686 | 0.803606 | 20.3903 | 0.381847 | 1.0 |
 | E5: QLoRA + BGE-M3 RAG | evidence + retrieved context | 32 | 0.828100 | 0.833577 | 0.824578 | 25.0248 | 0.435761 | 1.0 |
 | E6: Joint QA + SQA QLoRA | evidence | 32 | 0.852181 | 0.863649 | 0.842738 | 29.8649 | 0.500011 | 1.0 |
-| E7: 7B QA-only LoRA | evidence | 32 | 0.852083 | 0.863411 | 0.842868 | 29.523 | 0.504503 | 1.0 |
+| E7: 7B QA-only LoRA | evidence | 32 | 0.854924 | 0.866052 | 0.845836 | 30.178 | 0.510845 | 1.0 |
 | E8: 7B joint BF16 LoRA | evidence | 32 | 0.855361 | 0.867892 | 0.844675 | 26.957 | 0.509427 | 1.0 |
 
 Selected setting: **evidence + 32 tokens**. The 64-token reference is the E1 evidence row, not a separate run. E7 uses Qwen2.5-Omni-7B with BF16 LoRA (rank 8, alpha 16, 1 epoch, 10,000 Task 2 training items only) and the same evidence/32 inference; it differs from E6 by model size and training data only. E8 uses Qwen2.5-Omni-7B with joint BF16 LoRA (rank 16, alpha 32, 10,000 QA + 10,000 SQA inputs); checkpoint-3,500 was selected as best on a fixed 200-item dev subset.
