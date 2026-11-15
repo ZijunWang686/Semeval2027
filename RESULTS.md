@@ -1,18 +1,5 @@
 # Experimental Results
 
-## Same-backend control (3B) — 2026-10-21
-
-Fixed 200 paired dev IDs, evidence/32, ms-swift PT for both the 3B base and E3. E3 predictions are extracted from the completed full-dev run. These control results are separate from the full-dev tables below. E7–E8 use the same ms-swift PT backend, so 3B-versus-7B comparisons share the inference implementation; a 7B base no-adapter control has not been run.
-
-| Task | Model | N | BERTScore-F1 | BERTScore-P | BERTScore-R | BLEU | ROUGE-L | Coverage |
-|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Task 2 QA | Base, no adapter | 200 | 0.806181 | 0.809083 | 0.805495 | 19.1973 | 0.399252 | 1.0 |
-| Task 2 QA | E3 adapter | 200 | 0.853217 | 0.860313 | 0.848031 | 30.3449 | 0.505105 | 1.0 |
-| Task 1 SQA | Base, no adapter | 200 | 0.799018 | 0.801613 | 0.799155 | 18.567 | 0.383989 | 1.0 |
-| Task 1 SQA | E3 adapter | 200 | 0.850415 | 0.857458 | 0.845306 | 29.632 | 0.497709 | 1.0 |
-
-QA F1 difference: **+0.047036**; SQA F1 difference: **+0.051397**, with the adapter under the same inference backend. Both controls are complete. Joint training data preparation is complete: smoke 100+100, small 1000+1000, full 10000+10000; each task has 1000 dev items. Training audio duration: 2.081–12.022 seconds (mean 5.627 seconds).
-
 ## Unified settings
 
 - Model: Qwen2.5-Omni-3B for E0–E6; Qwen2.5-Omni-7B for E7–E8. English (`en`), MENA, complete dev split (1,000 items per task).
@@ -121,6 +108,19 @@ E3 uses the ms-swift PT inference backend with the trained adapter; E0–E2 used
 
 User-reported official score JSON: complete English dev, 1,000 items per task, no empty answers. Scores are under `outputs/E6_joint_full_dev/`. Joint training used 10,000 QA + 10,000 SQA inputs, a fresh adapter, and max_length=4096; evaluation retained max_length=8192 and evidence/32 as in E3. The smoke run completed; the optional 2,000-item stage was skipped in favor of full training. The comparison measures the joint training configuration, including more optimizer steps and the changed training length cap; Paired-bootstrap results are reported below.
 
+## Same-backend control (3B) — 2026-10-21
+
+Fixed 200 paired dev IDs, evidence/32, ms-swift PT for both the 3B base and E3. E3 predictions are extracted from the completed full-dev run. These control results are separate from the full-dev tables below. E7–E8 use the same ms-swift PT backend, so 3B-versus-7B comparisons share the inference implementation; a 7B base no-adapter control has not been run.
+
+| Task | Model | N | BERTScore-F1 | BERTScore-P | BERTScore-R | BLEU | ROUGE-L | Coverage |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Task 2 QA | Base, no adapter | 200 | 0.806181 | 0.809083 | 0.805495 | 19.1973 | 0.399252 | 1.0 |
+| Task 2 QA | E3 adapter | 200 | 0.853217 | 0.860313 | 0.848031 | 30.3449 | 0.505105 | 1.0 |
+| Task 1 SQA | Base, no adapter | 200 | 0.799018 | 0.801613 | 0.799155 | 18.567 | 0.383989 | 1.0 |
+| Task 1 SQA | E3 adapter | 200 | 0.850415 | 0.857458 | 0.845306 | 29.632 | 0.497709 | 1.0 |
+
+QA F1 difference: **+0.047036**; SQA F1 difference: **+0.051397**, with the adapter under the same inference backend. Both controls are complete. Joint training data preparation is complete: smoke 100+100, small 1000+1000, full 10000+10000; each task has 1000 dev items. Training audio duration: 2.081–12.022 seconds (mean 5.627 seconds).
+
 ## E6 vs E3 — paired bootstrap
 
 User-reported server results: 1,000 paired question IDs per task, official pinned mmBERT per-item F1, 10,000 percentile bootstrap replicates, seed=42. Differences are E6 minus E3.
@@ -157,3 +157,44 @@ All rows use complete English QA dev (N=1,000). Compare retrievers within the sa
 | E3 + RAG (main E5) | BGE-M3 dense | 0.828100 | 0.833577 | 0.824578 | 25.0248 | 0.435761 | 1.0 |
 
 BGE-M3 minus BM25 F1: −0.003079 without LoRA and −0.001006 with the E3 adapter. Neither retriever improves over E3 without retrieval (0.848240). No paired significance test has been run for the retriever differences. The measured outcome supports the same practical choice: retain E8 without RAG as the final system.
+
+## Next steps and analysis — 2026-11-15
+
+### Checkpoint plateau
+
+Fixed 200-item dev subset, E8 (7B joint BF16 LoRA, evidence/32, greedy):
+
+| Checkpoint | 2000 | 3000 | 3500 | 4000 |
+|---|---:|---:|---:|---:|
+| BERTScore-F1 | 0.859418 | 0.855334 | 0.861116 | 0.858747 |
+
+There is no monotonic trend from step 2,000 to 4,000; the spread (about ±0.003) is at the level of evaluation noise, and step 4,000 is 0.0024 below step 3,500. Training was stopped and **checkpoint-3,500** retained. The gain over the one-epoch 7B QA-only run (E7, QA 0.854924) comes mainly from doubled data and joint training, not from additional epochs.
+
+### Generation-length diagnosis — completed
+
+E8 QA has BERTScore-P 0.867892 > R 0.844675, so the 32-token cap was suspected of truncating answers. A cap/decoding sweep was run on the fixed 200-item dev subset (same checkpoint-3,500, greedy decoding) to separate hard truncation from under-informative-but-complete answers:
+
+| Setting | BERTScore-F1 | BERTScore-P | BERTScore-R | BLEU | ROUGE-L |
+|---|---:|---:|---:|---:|---:|
+| 32 tokens, greedy (baseline) | 0.861116 | — | — | — | — |
+| 48 tokens, greedy | **0.865436** | 0.871523 | 0.860769 | 30.0986 | 0.533245 |
+| 48 tokens, greedy, repetition_penalty 1.1 | 0.855281 | 0.857612 | 0.854303 | 27.5140 | 0.512264 |
+| 64 tokens, greedy | 0.865588 | — | — | 30.1357 | 0.532969 |
+
+The 32→48 change raises R from ~0.845 to 0.861 with P essentially unchanged, confirming that the 32-token cap was truncating answers and that the extra tokens carry real information (not padding). The gain over the 200-item baseline is **+0.0043 F1** and **+2.58 BLEU**; the full-dev 32-token baseline (QA 0.855361) was measured on 1,000 items, so the 200-item +0.0043 is not directly comparable to it, but direction and magnitude are consistent.
+
+- **48 tokens + greedy is the retained setting.** Going from 48→64 tokens adds only +0.00015 F1 (and ROUGE-L dips slightly), i.e. zero marginal return; 48 fully resolves the truncation, so the cap is not increased further.
+- **repetition_penalty 1.1 is harmful** (−0.0101 F1, mean output ~23.5 words): the penalty shortens generations and undoes the recall gain. It is discarded.
+- Beam search remains deferred; the truncation question is now closed.
+
+The length bottleneck is resolved. The remaining P>R gap is therefore answer completeness/content rather than length, which motivates few-shot exemplars next.
+
+### Priority assessment
+
+- **Full-dev baseline for E8** (done): QA 0.855361, SQA 0.855884. Checkpoint selection used a 200-item subset of the same dev split, so the reported full-dev values carry a mild selection-leakage caveat.
+- **Cap/decoding sweep** (done): 48 tokens + greedy is retained (+0.0043 F1 and +2.58 BLEU over the 200-item baseline; R +0.015 confirms the cap was truncating). repetition_penalty 1.1 and 64 tokens add nothing and are dropped. The 48-token setting must still be confirmed on the full 1,000-item dev.
+- **Few-shot retrieval** (next): retrieve 3–5 nearest train question–answer pairs as in-context examples. This differs from the E4/E5 passage RAG, which was negative (E5 −0.020140 QA F1 versus E3); exemplars align answer style and completeness rather than injecting retrieved passages, directly targeting the residual P>R gap.
+- **External cultural-knowledge RAG**: largest potential upside but the largest engineering cost; only after few-shot.
+- **Ensemble / best-of-N**: last; combining free-form answers needs a reliable reranker.
+
+Remaining expected gains are modest (roughly +0.005 from few-shot; external-knowledge RAG is the only lever with larger headroom). All screening uses the fixed 200-item dev subset, and any winning configuration must be confirmed on the full 1,000-item dev.
