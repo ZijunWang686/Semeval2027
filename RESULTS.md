@@ -243,3 +243,40 @@ Gain_l = F1_l(E8) − F1_l(Base), per task. Flag positive transfer vs negative t
 ### Language-family grouping (optional)
 
 Arabic variants · South Asian · European · African — analyze transfer behavior by family.
+# 论文大纲与实验规划
+
+## 一、论文结构
+
+| 章节 | 内容 | 对应实验 |
+| :--- | :--- | :--- |
+| **1. Introduction** | 研究背景、挑战、研究动机与贡献 | 整体研究 |
+| **2. Task and Dataset** | MMCQA 任务、QA/SQA、数据集与语言分布 | 官方数据集 |
+| **3. Methodology** | Evidence-aware Prompting、LoRA 适配、联合训练框架 | E1–E8 |
+| **4. Experimental Setup** | 3B/7B 模型、训练参数、推理配置、评价指标 | E0–E9 |
+| **5. Main Experimental Results** | Prompt 消融、QLoRA、联合训练、模型规模对比、RAG | E0–E8 |
+| **6. Generation Length Optimization** | 输出长度对比与优化 | E9：48 tokens |
+| **7. Zero-Shot Cross-Lingual Evaluation** | 原始 7B Base 与 E8 在16种非英语语言上的对比 | 待完成 |
+| **8. Error Analysis and Discussion** | 语言迁移差异、文化知识缺失、视觉错误、幻觉 | 待完成 |
+| **9. Conclusion** | 研究总结、局限性与未来工作 | 全部实验 |
+
+---
+
+## 二、实验编号整理
+
+* **E0–E2**：官方基线与 Prompt 消融。
+* **E3**：Task 2 QLoRA 及跨任务迁移。
+* **E4–E5**：RAG 消融。
+* **E6**：3B Joint QLoRA。
+* **E7**：7B QA-only LoRA。
+* **E8**：7B Joint BF16 LoRA。
+* **E9**：E8 + 48-token 生成长度优化。
+
+---
+
+## 三、论文核心贡献
+
+建议归纳为以下三个方面：
+
+1. **Prompt 与模型适配**：提出 Evidence-aware Prompting 和跨任务联合 LoRA 适配方法。
+2. **系统性实验分析**：深入研究 RAG、模型规模、生成长度及联合训练对模型性能的影响。
+3. **跨语言泛化评测**：通过原始 7B Base 与 E8 的对照，系统评估英语训练的多模态模型在 16 种非英语语言上的零样本迁移能力。
